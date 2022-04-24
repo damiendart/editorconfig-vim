@@ -60,23 +60,34 @@ lockvar s:SECTCRE s:OPTCRE s:MAX_SECTION_NAME s:MAX_PROPERTY_NAME s:MAX_PROPERTY
 " Read \p config_filename and return the options applicable to
 " \p target_filename.  This is the main entry point in this file.
 function! editorconfig_core#ini#read_ini_file(config_filename, target_filename)
-    let l:oldenc = &encoding
+    " This function used to temporarily set "&encoding" to UTF-8 but
+    " this would cause the filename at the bottom to appear and
+    " immediately disappear when changing buffers. This is such a minor
+    " quibble, but it was one of those things that once I noticed it I
+    " couldn't unsee it.
+    "
+    " There are a few open issues and pull requests on GitHub that offer
+    " solutions, so maybe this'll get fixed eventually:
+    "
+    " - <https://github.com/editorconfig/editorconfig-vim/issues/144>,
+    " - <https://github.com/editorconfig/editorconfig-vim/pull/147>, and
+    " - <https://github.com/editorconfig/editorconfig-vim/issues/144>
+    "
+    " For now, as I "set encoding=utf-8" in my dotfiles anyway, removing
+    " the offending lines here seems to do the trick.
 
     if !filereadable(a:config_filename)
         return {}
     endif
 
-    try     " so &encoding will always be reset
-        let &encoding = 'utf-8'     " so readfile() will strip BOM
+    try
         let l:lines = readfile(a:config_filename)
         let result = s:parse(a:config_filename, a:target_filename, l:lines)
     catch
-        let &encoding = l:oldenc
         " rethrow, but with a prefix since throw 'Vim...' fails.
         throw 'Could not read editorconfig file at ' . v:throwpoint . ': ' . string(v:exception)
     endtry
 
-    let &encoding = l:oldenc
     return result
 endfunction
 
