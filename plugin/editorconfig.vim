@@ -220,6 +220,13 @@ function! s:UseConfigFiles(from_autocmd) abort " Apply config to the current buf
     endif
     call setbufvar(l:bufnr, 'editorconfig_tried', 1)
 
+    " Handle instances when "expand('%:p')" does not provide an absolute
+    " path due to an non-existent directory (for more information, see
+    " <https://groups.google.com/g/vim_use/c/WLsWD7Qz1Ig/m/e5UgfuopYoIJ>).
+    if l:buffer_name !~ '/.*' || l:buffer_name !~ '.:.*'
+        let l:buffer_name = resolve(fnamemodify(getcwd(), ':p') . l:buffer_name)
+    endif
+
     " Only process normal buffers (do not treat help files as '.txt' files)
     " When starting Vim with a directory, the buftype might not yet be set:
     " Therefore, also check if buffer_name is a directory.
