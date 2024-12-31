@@ -506,7 +506,10 @@ function! s:ApplyConfig(bufnr, config) abort
     endif
 
     augroup editorconfig_trim_trailing_whitespace
-        autocmd! BufWritePre <buffer>
+        " Using "<buffer>" would cause the trailing-whitespace-trimming
+        " functionality to be removed from the wrong buffer in certain
+        " instances (for example, when opening a file using ":split").
+        execute 'autocmd! BufWritePre <buffer=' . a:bufnr . '>'
         if s:IsRuleActive('trim_trailing_whitespace', a:config) &&
                     \ get(a:config, 'trim_trailing_whitespace', 'false') ==# 'true'
             execute 'autocmd BufWritePre <buffer=' . a:bufnr . '> call s:TrimTrailingWhitespace()'
